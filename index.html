@@ -3,36 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جستجو در گوگل</title>
+    <title>جستجو</title>
     <style>
         body {
             text-align: center;
             font-family: Arial, sans-serif;
+            background-color: black;
+            color: white;
         }
         input, button {
             margin: 10px;
             padding: 10px;
             font-size: 16px;
+            background-color: gray;
+            color: white;
+            border: none;
         }
         iframe {
             width: 90%;
             height: 500px;
-            border: 1px solid #ccc;
+            border: 1px solid white;
+            background: #222;
             margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <input type="text" id="searchBox" placeholder="عبارت مورد نظر را وارد کنید">
-    <button onclick="searchGoogle()">جستجو</button>
+    <button onclick="searchDuckDuckGo()">جستجو</button>
     <br>
     <iframe id="resultFrame"></iframe>
 
     <script>
-        function searchGoogle() {
+        function searchDuckDuckGo() {
             var query = document.getElementById("searchBox").value;
             if (query.trim() !== "") {
-                document.getElementById("resultFrame").src = "https://www.google.com/search?q=" + encodeURIComponent(query);
+                document.getElementById("resultFrame").src = "https://duckduckgo.com/?q=" + encodeURIComponent(query) + "&ia=web";
             }
         }
     </script>
