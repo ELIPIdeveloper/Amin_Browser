@@ -7,9 +7,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ml5/0.12.2/ml5.min.js"></script>
     <style>
-        body { text-align: center; font-family: Arial, sans-serif; }
-        canvas, img { display: block; margin: 10px auto; }
-        button, input { margin-top: 10px; font-size: 16px; }
+        body { text-align: center; font-family: Arial, sans-serif; background: #222; color: white; }
+        canvas, img { display: block; margin: 10px auto; max-width: 100%; }
+        button, input { margin-top: 10px; font-size: 16px; padding: 10px; border: none; cursor: pointer; }
+        button { background: #ff5722; color: white; }
+        button:hover { background: #e64a19; }
     </style>
 </head>
 <body>
@@ -50,28 +52,33 @@
                 reader.onload = function(e) {
                     inputImage.src = e.target.result;
                     inputImage.style.display = "block";
+                    console.log("تصویر بارگذاری شد:", inputImage.src);
                 };
                 reader.readAsDataURL(file);
+            } else {
+                console.log("هیچ فایلی انتخاب نشده است.");
             }
         });
 
         // پردازش تصویر و حذف پس‌زمینه
         function removeBackground() {
-            if (!inputImage.src) {
+            if (!inputImage.src || inputImage.src === window.location.href) {
                 alert("لطفاً یک تصویر انتخاب کنید.");
+                console.error("مشکل در بارگذاری تصویر. مقدار src:", inputImage.src);
                 return;
             }
 
             bodypix.segment(inputImage, {segmentationThreshold: 0.5}, function(error, result) {
                 if (error) {
-                    console.error(error);
+                    console.error("خطا در پردازش تصویر:", error);
                     return;
                 }
-                
+
                 // نمایش تصویر پردازش‌شده
                 outputCanvas.width = inputImage.width;
                 outputCanvas.height = inputImage.height;
                 ctx.putImageData(result.backgroundMask, 0, 0);
+                console.log("پردازش تصویر انجام شد.");
             });
         }
     </script>
