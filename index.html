@@ -3,61 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حذف پس‌زمینه عکس</title>
+    <title>حذف پس‌زمینه تصویر</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ml5/0.12.2/ml5.min.js"></script>
     <style>
         body { text-align: center; font-family: Arial, sans-serif; }
-        canvas { margin-top: 10px; }
+        canvas, img { display: block; margin: 10px auto; }
+        button, input { margin-top: 10px; font-size: 16px; }
     </style>
 </head>
 <body>
 
-    <h2>گرفتن عکس و حذف پس‌زمینه</h2>
-    <video id="video" width="320" height="240" autoplay></video>
+    <h2>انتخاب تصویر و حذف پس‌زمینه</h2>
+    
+    <!-- ورودی برای انتخاب تصویر -->
+    <input type="file" id="imageInput" accept="image/*">
     <br>
-    <button onclick="captureImage()">گرفتن عکس</button>
+    
+    <!-- نمایش تصویر اصلی -->
+    <img id="inputImage" width="320" height="240" style="display:none;">
+    
+    <!-- دکمه برای پردازش تصویر -->
+    <button onclick="removeBackground()">حذف پس‌زمینه</button>
     <br><br>
+    
+    <!-- بوم برای نمایش خروجی -->
     <canvas id="outputCanvas"></canvas>
 
     <script>
-        let video;
         let bodypix;
-        let segmentation;
-        let outputCanvas, ctx;
+        let inputImage = document.getElementById("inputImage");
+        let imageInput = document.getElementById("imageInput");
+        let outputCanvas = document.getElementById("outputCanvas");
+        let ctx = outputCanvas.getContext("2d");
 
-        function setup() {
-            video = createCapture(VIDEO);
-            video.size(320, 240);
-            video.hide();
-
-            outputCanvas = document.getElementById("outputCanvas");
-            ctx = outputCanvas.getContext("2d");
-            outputCanvas.width = 320;
-            outputCanvas.height = 240;
-
-            bodypix = ml5.bodyPix(modelLoaded);
-        }
-
-        function modelLoaded() {
+        // بارگذاری مدل BodyPix
+        bodypix = ml5.bodyPix(() => {
             console.log("مدل BodyPix بارگذاری شد.");
-        }
+        });
 
-        function captureImage() {
-            bodypix.segment(video, gotResult);
-        }
+        // وقتی کاربر یک عکس انتخاب می‌کند
+        imageInput.addEventListener("change", function(event) {
+            let file = event.target.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    inputImage.src = e.target.result;
+                    inputImage.style.display = "block";
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
-        function gotResult(error, result) {
-            if (error) {
-                console.error(error);
+        // پردازش تصویر و حذف پس‌زمینه
+        function removeBackground() {
+            if (!inputImage.src) {
+                alert("لطفاً یک تصویر انتخاب کنید.");
                 return;
             }
-            segmentation = result;
-            ctx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
-            ctx.putImageData(segmentation.backgroundMask, 0, 0);
-        }
 
-        setup();
+            bodypix.segment(inputImage, {segmentationThreshold: 0.5}, function(error, result) {
+                if (error) {
+                    console.error(error);
+                    return;
+                }
+                
+                // نمایش تصویر پردازش‌شده
+                outputCanvas.width = inputImage.width;
+                outputCanvas.height = inputImage.height;
+                ctx.putImageData(result.backgroundMask, 0, 0);
+            });
+        }
     </script>
 
 </body>
