@@ -3,108 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحه بندی کشویی تصاویر</title>
+    <title>حذف پس‌زمینه عکس</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ml5/0.12.2/ml5.min.js"></script>
     <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-        }
-        .carousel-container {
-            width: 100%;
-            overflow: hidden; /* پنهان کردن هر چیزی که خارج از صفحه است */
-            position: relative;
-        }
-        .image-container {
-            display: flex;
-            flex-wrap: nowrap;
-            transition: transform 0.3s ease;
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch; /* برای موبایل */
-        }
-        .image-container img {
-            width: 25%; /* هر تصویر 25 درصد از عرض صفحه */
-            height: 200px;
-            object-fit: cover;
-            scroll-snap-align: start;
-            margin-right: 10px; /* فاصله بین تصاویر */
-            border-radius: 10px;
-        }
+        body { text-align: center; font-family: Arial, sans-serif; }
+        canvas { margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div class="carousel-container">
-    <div class="image-container" id="carousel">
-        <!-- تصاویر نمونه -->
-        <img src="https://via.placeholder.com/150" alt="Image 1">
-        <img src="https://via.placeholder.com/150" alt="Image 2">
-        <img src="https://via.placeholder.com/150" alt="Image 3">
-        <img src="https://via.placeholder.com/150" alt="Image 4">
-        <img src="https://via.placeholder.com/150" alt="Image 5">
-        <img src="https://via.placeholder.com/150" alt="Image 6">
-        <img src="https://via.placeholder.com/150" alt="Image 7">
-        <img src="https://via.placeholder.com/150" alt="Image 8">
-        <img src="https://via.placeholder.com/150" alt="Image 9">
-        <img src="https://via.placeholder.com/150" alt="Image 10">
-        <img src="https://via.placeholder.com/150" alt="Image 11">
-        <img src="https://via.placeholder.com/150" alt="Image 12">
-        <img src="https://via.placeholder.com/150" alt="Image 13">
-        <img src="https://via.placeholder.com/150" alt="Image 14">
-        <img src="https://via.placeholder.com/150" alt="Image 15">
-        <img src="https://via.placeholder.com/150" alt="Image 16">
-        <img src="https://via.placeholder.com/150" alt="Image 17">
-        <img src="https://via.placeholder.com/150" alt="Image 18">
-        <img src="https://via.placeholder.com/150" alt="Image 19">
-        <img src="https://via.placeholder.com/150" alt="Image 20">
-    </div>
-</div>
+    <h2>گرفتن عکس و حذف پس‌زمینه</h2>
+    <video id="video" width="320" height="240" autoplay></video>
+    <br>
+    <button onclick="captureImage()">گرفتن عکس</button>
+    <br><br>
+    <canvas id="outputCanvas"></canvas>
 
-<script>
-    const carousel = document.getElementById('carousel');
-    let isDragging = false;
-    let startX;
-    let scrollLeft;
+    <script>
+        let video;
+        let bodypix;
+        let segmentation;
+        let outputCanvas, ctx;
 
-    carousel.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        startX = e.pageX - carousel.offsetLeft;
-        scrollLeft = carousel.scrollLeft;
-    });
+        function setup() {
+            video = createCapture(VIDEO);
+            video.size(320, 240);
+            video.hide();
 
-    carousel.addEventListener('mouseleave', () => {
-        isDragging = false;
-    });
+            outputCanvas = document.getElementById("outputCanvas");
+            ctx = outputCanvas.getContext("2d");
+            outputCanvas.width = 320;
+            outputCanvas.height = 240;
 
-    carousel.addEventListener('mouseup', () => {
-        isDragging = false;
-    });
+            bodypix = ml5.bodyPix(modelLoaded);
+        }
 
-    carousel.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        const x = e.pageX - carousel.offsetLeft;
-        const walk = (x - startX) * 3; // مقدار سرعت حرکت
-        carousel.scrollLeft = scrollLeft - walk;
-    });
+        function modelLoaded() {
+            console.log("مدل BodyPix بارگذاری شد.");
+        }
 
-    // برای موبایل: از touch events استفاده می‌کنیم
-    carousel.addEventListener('touchstart', (e) => {
-        isDragging = true;
-        startX = e.touches[0].pageX - carousel.offsetLeft;
-        scrollLeft = carousel.scrollLeft;
-    });
+        function captureImage() {
+            bodypix.segment(video, gotResult);
+        }
 
-    carousel.addEventListener('touchend', () => {
-        isDragging = false;
-    });
+        function gotResult(error, result) {
+            if (error) {
+                console.error(error);
+                return;
+            }
+            segmentation = result;
+            ctx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+            ctx.putImageData(segmentation.backgroundMask, 0, 0);
+        }
 
-    carousel.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-        const x = e.touches[0].pageX - carousel.offsetLeft;
-        const walk = (x - startX) * 3; // مقدار سرعت حرکت
-        carousel.scrollLeft = scrollLeft - walk;
-    });
-</script>
+        setup();
+    </script>
 
 </body>
 </html>
