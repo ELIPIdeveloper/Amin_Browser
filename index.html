@@ -1,24 +1,9 @@
-
-                        <!DOCTYPE html>
-                        <html lang="en">
-                        <head>
-                            <meta charset="UTF-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-							<style>
-								body {
-									background-color: white; /* Ensure the iframe has a white background */
-								}
-
-								
-							</style>
-                        </head>
-                        <body>
-                            <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fa">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تبدیل صدا به متن</title>
+    <title>تبدیل صدا به متن (فارسی)</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -40,7 +25,7 @@
 </head>
 <body>
 
-    <h1>تبدیل صدا به متن</h1>
+    <h1>تبدیل صدا به متن (زبان فارسی)</h1>
     <button onclick="startRecognition()">شروع به صحبت کنید</button>
     <div id="output">متن شما در اینجا ظاهر خواهد شد...</div>
 
@@ -51,6 +36,10 @@
             if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 recognition = new SpeechRecognition();
+                
+                // تنظیم زبان به فارسی
+                recognition.lang = 'fa-IR'; 
+
                 recognition.continuous = true; // برای ادامه ضبط تا زمانی که کاربر صحبت می‌کند
                 recognition.interimResults = true; // نتایج موقت را نشان دهد
 
@@ -79,12 +68,3 @@
 
 </body>
 </html>
-
-
-
-							<script>
-                            	
-							</script>
-                        </body>
-                        </html>
-                    
