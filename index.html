@@ -1,87 +1,90 @@
-<!DOCTYPE html>
+
+                        <!DOCTYPE html>
+                        <html lang="en">
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+							<style>
+								body {
+									background-color: white; /* Ensure the iframe has a white background */
+								}
+
+								
+							</style>
+                        </head>
+                        <body>
+                            <!DOCTYPE html>
 <html lang="fa">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حذف پس‌زمینه تصویر</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ml5/0.12.2/ml5.min.js"></script>
+    <title>تبدیل صدا به متن</title>
     <style>
-        body { text-align: center; font-family: Arial, sans-serif; background: #222; color: white; }
-        canvas, img { display: block; margin: 10px auto; max-width: 100%; }
-        button, input { margin-top: 10px; font-size: 16px; padding: 10px; border: none; cursor: pointer; }
-        button { background: #ff5722; color: white; }
-        button:hover { background: #e64a19; }
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #output {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-    <h2>انتخاب تصویر و حذف پس‌زمینه</h2>
-    
-    <!-- ورودی برای انتخاب تصویر -->
-    <input type="file" id="imageInput" accept="image/*">
-    <br>
-    
-    <!-- نمایش تصویر اصلی -->
-    <img id="inputImage" width="320" height="240" style="display:none;">
-    
-    <!-- دکمه برای پردازش تصویر -->
-    <button onclick="removeBackground()">حذف پس‌زمینه</button>
-    <br><br>
-    
-    <!-- بوم برای نمایش خروجی -->
-    <canvas id="outputCanvas"></canvas>
+    <h1>تبدیل صدا به متن</h1>
+    <button onclick="startRecognition()">شروع به صحبت کنید</button>
+    <div id="output">متن شما در اینجا ظاهر خواهد شد...</div>
 
     <script>
-        let bodypix;
-        let inputImage = document.getElementById("inputImage");
-        let imageInput = document.getElementById("imageInput");
-        let outputCanvas = document.getElementById("outputCanvas");
-        let ctx = outputCanvas.getContext("2d");
+        let recognition;
 
-        // بارگذاری مدل BodyPix
-        bodypix = ml5.bodyPix(() => {
-            console.log("مدل BodyPix بارگذاری شد.");
-        });
+        function startRecognition() {
+            if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = true; // برای ادامه ضبط تا زمانی که کاربر صحبت می‌کند
+                recognition.interimResults = true; // نتایج موقت را نشان دهد
 
-        // وقتی کاربر یک عکس انتخاب می‌کند
-        imageInput.addEventListener("change", function(event) {
-            let file = event.target.files[0];
-            if (file) {
-                let reader = new FileReader();
-                reader.onload = function(e) {
-                    inputImage.src = e.target.result;
-                    inputImage.style.display = "block";
-                    console.log("تصویر بارگذاری شد:", inputImage.src);
+                recognition.onresult = function(event) {
+                    let transcript = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        transcript += event.results[i][0].transcript;
+                    }
+                    document.getElementById('output').innerText = transcript;
                 };
-                reader.readAsDataURL(file);
+
+                recognition.onerror = function(event) {
+                    console.error('خطا در تشخیص صدا:', event.error);
+                };
+
+                recognition.onend = function() {
+                    console.log('تشخیص صدا پایان یافت.');
+                };
+
+                recognition.start();
             } else {
-                console.log("هیچ فایلی انتخاب نشده است.");
+                alert(' sorry! your browser does not support speech recognition.');
             }
-        });
-
-        // پردازش تصویر و حذف پس‌زمینه
-        function removeBackground() {
-            if (!inputImage.src || inputImage.src === window.location.href) {
-                alert("لطفاً یک تصویر انتخاب کنید.");
-                console.error("مشکل در بارگذاری تصویر. مقدار src:", inputImage.src);
-                return;
-            }
-
-            bodypix.segment(inputImage, {segmentationThreshold: 0.5}, function(error, result) {
-                if (error) {
-                    console.error("خطا در پردازش تصویر:", error);
-                    return;
-                }
-
-                // نمایش تصویر پردازش‌شده
-                outputCanvas.width = inputImage.width;
-                outputCanvas.height = inputImage.height;
-                ctx.putImageData(result.backgroundMask, 0, 0);
-                console.log("پردازش تصویر انجام شد.");
-            });
         }
     </script>
 
 </body>
 </html>
+
+
+
+							<script>
+                            	
+							</script>
+                        </body>
+                        </html>
+                    
