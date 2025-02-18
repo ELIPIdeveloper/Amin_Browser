@@ -3,100 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Speech Recognition</title>
+    <title>تشخیص صدا</title>
     <style>
-        body, html {
+        body {
             margin: 0;
             padding: 0;
-            height: 100%;
-            width: 100%;
-            background: url('background.jpg') no-repeat center center fixed;
+            background-image: url('background.jpg');
             background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: flex-end;
+            align-items: center;
+            color: white;
             font-family: Arial, sans-serif;
         }
 
-        .microphone {
-            position: relative;
-            bottom: 1%;
+        #microphone {
             width: 50%;
+            max-height: 150px;
+            margin-bottom: 1%;
             cursor: pointer;
         }
 
-        .text-output {
-            color: white;
+        #text {
             text-align: center;
-            font-size: 1.2em;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
-
-    <div class="text-output" id="outputText"></div>
-    <img src="microphone.png" alt="Microphone" class="microphone" id="microphone">
+    <div id="text"></div>
+    <img id="microphone" src="microphone.png" alt="Microphone">
 
     <script>
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        const outputText = document.getElementById('outputText');
         const microphone = document.getElementById('microphone');
+        const textElement = document.getElementById('text');
 
-        recognition.lang = 'fa-IR';
-        recognition.continuous = false; // تنها یک بار شناسایی صوتی انجام شود
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
+        let recognition;
 
-        // فعال‌سازی شناسایی صوتی با کلیک روی عکس میکروفون
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'fa-IR';
+            recognition.maxAlternatives = 1;
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript.trim();
+                textElement.textContent = transcript;
+                handleText(transcript);
+                recognition.stop();
+            };
+
+            recognition.onerror = (event) => {
+                console.error('خطا در تشخیص صدا:', event.error);
+                recognition.stop();
+            };
+        } else {
+            alert('مرورگر شما از Speech Recognition پشتیبانی نمی‌کند.');
+        }
+
         microphone.addEventListener('click', () => {
-            outputText.textContent = '...در حال شناسایی';
+            textElement.textContent = '';
             recognition.start();
         });
 
-        // بررسی نتایج شناسایی صوتی
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            outputText.textContent = `متن شناسایی شده: ${transcript}`;
+        function handleText(text) {
+            let audioSrc = 'default.mp3';
 
-            // بررسی کلمات خاص
-            if (transcript.includes('سلام')) {
-                playSound('greeting.mp3');
-            } else if (transcript.includes('چه') || transcript.includes('اسم تو چیه') || transcript.includes('کی هستی') || transcript.includes('سیری') || transcript.includes('بیکسپی')) {
-                playSound('Amin.m4a');
-            } else if (transcript.includes('چیست') || transcript.includes('کیست')) {
-                searchGoogle(transcript);
-            } else {
-                playSound('default.mp3');
+            if (text.includes('سلام')) {
+                audioSrc = 'greeting.mp3';
+            } else if (
+                text.includes('اسم تو چیه') ||
+                text.includes('ی هستی') ||
+                text.includes('سیری') ||
+                text.includes('بیکسپی')
+            ) {
+                audioSrc = 'Amin.m4a';
+            } else if (
+                text.includes('روشن کن') ||
+                text.includes('خاموش کن') ||
+                text.includes('روشن بکن') ||
+                text.includes('خاموش بکن') ||
+                text.includes('تنظیم کن') ||
+                text.includes('برو تو') ||
+                text.includes('باز کن')
+            ) {
+                audioSrc = 'On_off_speed.m4a';
+            } else if (
+                text.includes('خوبی') ||
+                text.includes('چطوری') ||
+                text.includes('بهتری') ||
+                text.includes('حالت چطوره') ||
+                text.includes('حالت خوبه') ||
+                text.includes('تو خیلی')
+            ) {
+                audioSrc = 'Tanks.m4a';
+            } else if (text.includes('چه خبر')) {
+                audioSrc = 'Slalamati(1).M4A';
+            } else if (text.includes('چیست') || text.includes('کیست')) {
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(text)}`, '_blank');
+                return;
             }
 
-            recognition.stop(); // متوقف کردن شناسایی صوتی پس از 10 ثانیه
-        };
+            playAudio(audioSrc);
+        }
 
-        // ایجاد صدا
-        function playSound(audioFile) {
-            const audio = new Audio(audioFile);
+        function playAudio(src) {
+            const audio = new Audio(src);
             audio.play();
         }
-
-        // جستجوی گوگل
-        function searchGoogle(query) {
-            const searchQuery = query.replace(/ /g, '+');
-            window.open(`https://www.google.com/search?q=${searchQuery}`, '_blank');
-        }
-
-        // مدیریت خطاهای شناسایی صوتی
-        recognition.onerror = (event) => {
-            console.error('خطای شناسایی صوتی:', event.error);
-            outputText.textContent = 'خطای شناسایی صوتی!';
-        };
-
-        // محدود کردن مدت زمان شناسایی صوتی به 10 ثانیه
-        recognition.onend = () => {
-            outputText.textContent += ' - شناسایی صوتی متوقف شد.';
-        };
     </script>
-
 </body>
 </html>
