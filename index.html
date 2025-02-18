@@ -75,11 +75,23 @@
             else playAudio("default.mp3");
         }
 
+        // تابع برای شروع شناسایی صدا با محدودیت زمانی
+        function startRecognitionWithTimeout() {
+            recognition.start(); // شروع شناسایی صدا
+
+            // تنظیم تایمر برای متوقف کردن شناسایی پس از 7 ثانیه
+            recognitionTimeout = setTimeout(() => {
+                if (recognition && recognition.state === "started") {
+                    recognition.stop(); // متوقف کردن شناسایی صدا
+                }
+            }, 7000); // 7000 میلی‌ثانیه = 7 ثانیه
+        }
+
         // تابع برای دریافت نتیجه شناسایی صدا
         recognition.onresult = (event) => {
+            clearTimeout(recognitionTimeout); // حذف تایمر اگر نتیجه قبل از 7 ثانیه دریافت شد
             let text = event.results[0][0].transcript;
             recognition.stop(); // متوقف کردن شناسایی بعد از دریافت نتیجه
-            clearTimeout(recognitionTimeout); // حذف تایمر اگر نتیجه قبل از 7 ثانیه دریافت شد
             processSpeech(text);
         };
 
@@ -89,17 +101,15 @@
             setTimeout(() => recognition.start(), 1000);
         };
 
-        // تابع برای شروع شناسایی صدا و تنظیم تایمر
+        // رویداد کلیک بر روی دکمه میکروفن
         micButton.addEventListener("click", () => {
-            recognition.start(); // شروع شناسایی صدا
-
-            // تنظیم تایمر برای متوقف کردن شناسایی پس از 7 ثانیه
-            recognitionTimeout = setTimeout(() => {
-                if (recognition && recognition.state === "started") {
-                    recognition.stop(); // متوقف کردن شناسایی صدا
-                }
-            }, 7000); // 7000 میلی‌ثانیه = 7 ثانیه
+            startRecognitionWithTimeout();
         });
+
+        // شروع خودکار شناسایی صدا بعد از ورود کاربر به صفحه
+        window.onload = () => {
+            startRecognitionWithTimeout();
+        };
     </script>
 </body>
 </html>
