@@ -10,9 +10,9 @@
     <p>بر روی دکمه زیر کلیک کنید تا صدای خود را ثبت کنید:</p>
     <button onclick="startRecognition()">شروع به صحبت</button>
     <p id="output"></p>
-    <audio id="audioPlayer" controls style="display:none;">
+    <!-- عنصر audio با display:none پنهان شده است -->
+    <audio id="audioPlayer" style="display:none;">
         <source src="welcome.mp3" type="audio/mpeg">
-        مرورگر شما پشتیبانی از عناصر audio ندارد.
     </audio>
 
     <script>
@@ -36,7 +36,7 @@
 
                     // بررسی وجود کلمه "سلام"
                     if (transcript.includes("سلام")) {
-                        audioPlayer.style.display = 'block';
+                        // پخش فایل صوتی بدون نمایش عنصر audio
                         audioPlayer.play();
                     }
                 };
