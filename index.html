@@ -3,68 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تبدیل صدا به متن (فارسی)</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            direction: rtl;
-            text-align: center;
-            margin-top: 50px;
-        }
-        #output {
-            margin-top: 20px;
-            font-size: 18px;
-            color: #333;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-    </style>
+    <title>ویس ریکنگنایز فارسی</title>
 </head>
 <body>
-
-    <h1>تبدیل صدا به متن (زبان فارسی)</h1>
-    <button onclick="startRecognition()">شروع به صحبت کنید</button>
-    <div id="output">متن شما در اینجا ظاهر خواهد شد...</div>
+    <h1>تشخیص صدا و پخش فایل صوتی</h1>
+    <p>بر روی دکمه زیر کلیک کنید تا صدای خود را ثبت کنید:</p>
+    <button onclick="startRecognition()">شروع به صحبت</button>
+    <p id="output"></p>
+    <audio id="audioPlayer" controls style="display:none;">
+        <source src="welcome.mp3" type="audio/mpeg">
+        مرورگر شما پشتیبانی از عناصر audio ندارد.
+    </audio>
 
     <script>
         let recognition;
 
         function startRecognition() {
-            if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                recognition = new SpeechRecognition();
-                
-                // تنظیم زبان به فارسی
-                recognition.lang = 'fa-IR'; 
+            const output = document.getElementById('output');
+            const audioPlayer = document.getElementById('audioPlayer');
 
-                recognition.continuous = true; // برای ادامه ضبط تا زمانی که کاربر صحبت می‌کند
-                recognition.interimResults = true; // نتایج موقت را نشان دهد
+            // ساخت شیء SpeechRecognition
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
+                recognition.continuous = false; // تشخیص صدا تنها یک بار انجام می‌شود
+                recognition.interimResults = false;
+                recognition.lang = 'fa-IR'; // زبان فارسی
 
-                recognition.onresult = function(event) {
-                    let transcript = '';
-                    for (let i = event.resultIndex; i < event.results.length; i++) {
-                        transcript += event.results[i][0].transcript;
+                // رویداد برای نتایج تشخیص صدا
+                recognition.onresult = function (event) {
+                    const transcript = event.results[0][0].transcript;
+                    output.textContent = `متن تشخیص داده شده: ${transcript}`;
+
+                    // بررسی وجود کلمه "سلام"
+                    if (transcript.includes("سلام")) {
+                        audioPlayer.style.display = 'block';
+                        audioPlayer.play();
                     }
-                    document.getElementById('output').innerText = transcript;
                 };
 
-                recognition.onerror = function(event) {
-                    console.error('خطا در تشخیص صدا:', event.error);
-                };
-
-                recognition.onend = function() {
-                    console.log('تشخیص صدا پایان یافت.');
-                };
-
+                // شروع تشخیص صدا
                 recognition.start();
+
+                // پیام هشدار برای متوقف کردن تشخیص صدا
+                recognition.onend = function () {
+                    console.log('تشخیص صدا متوقف شد.');
+                };
             } else {
-                alert(' sorry! your browser does not support speech recognition.');
+                alert('مرورگر شما پشتیبانی از Speech Recognition نمی‌کند.');
             }
         }
     </script>
-
 </body>
 </html>
