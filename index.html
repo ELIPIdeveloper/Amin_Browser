@@ -10,6 +10,7 @@
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             background: url('background.jpg') no-repeat center center fixed;
             background-size: cover;
@@ -19,70 +20,81 @@
             height: 100vh;
             overflow: hidden;
         }
-        #container {
+
+        .text-box {
             position: absolute;
-            bottom: 5%;
-            width: 100%;
+            bottom: 60px;
+            width: 80%;
             text-align: center;
-        }
-        #result {
+            background: rgba(0, 0, 0, 0.7);
             color: white;
             font-size: 24px;
-            background: black;
             padding: 10px;
-            display: inline-block;
-            margin-bottom: 10px;
+            border-radius: 15px;
+            visibility: hidden;
         }
-        #mic {
+
+        .mic-button {
+            position: absolute;
+            bottom: 1%;
             width: 50%;
             height: auto;
             cursor: pointer;
         }
+
+        audio {
+            display: none;
+        }
     </style>
 </head>
 <body>
+    <div class="text-box" id="textBox"></div>
+    <img src="microphone.png" alt="Mic" class="mic-button" id="micButton">
 
-    <div id="container">
-        <div id="result"></div>
-        <br>
-        <img id="mic" src="microphone.png" alt="Microphone">
-    </div>
-
-    <audio id="greeting" src="greeting.mp3"></audio>
-    <audio id="default" src="default.mp3"></audio>
+    <audio id="greetingSound" src="greeting.mp3"></audio>
+    <audio id="defaultSound" src="default.mp3"></audio>
 
     <script>
-        const micButton = document.getElementById("mic");
-        const resultDiv = document.getElementById("result");
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        
-        recognition.lang = "fa-IR";
-        recognition.interimResults = false;
-        recognition.continuous = false;
+        const micButton = document.getElementById("micButton");
+        const textBox = document.getElementById("textBox");
+        const greetingSound = document.getElementById("greetingSound");
+        const defaultSound = document.getElementById("defaultSound");
 
-        micButton.addEventListener("click", () => {
-            resultDiv.textContent = "در حال گوش دادن...";
-            recognition.start();
-        });
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert("مرورگر شما از تشخیص صدا پشتیبانی نمی‌کند!");
+        } else {
+            const recognition = new SpeechRecognition();
+            recognition.lang = "fa-IR";
+            recognition.interimResults = true;
+            recognition.continuous = false;
 
-        recognition.onresult = (event) => {
-            const text = event.results[0][0].transcript;
-            resultDiv.textContent = text;
-            recognition.stop();
+            micButton.addEventListener("click", () => {
+                textBox.style.visibility = "visible";
+                textBox.innerText = "در حال گوش دادن...";
+                recognition.start();
+            });
 
-            if (text.includes("سلام")) {
-                document.getElementById("greeting").play();
-            } else if (text.includes("چیست") || text.includes("کیست")) {
-                window.open(`https://www.google.com/search?q=${encodeURIComponent(text)}`, "_blank");
-            } else {
-                document.getElementById("default").play();
-            }
-        };
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                textBox.innerText = transcript;
+                recognition.stop();
 
-        recognition.onerror = (event) => {
-            resultDiv.textContent = "خطا در تشخیص صدا";
-        };
+                if (transcript.includes("سلام")) {
+                    greetingSound.play();
+                } else if (transcript.includes("چیست") || transcript.includes("کیست")) {
+                    window.open(`https://www.google.com/search?q=${transcript}`, "_blank");
+                } else {
+                    defaultSound.play();
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Error:", event.error);
+                textBox.innerText = "خطایی رخ داد. دوباره امتحان کنید.";
+                recognition.stop();
+            };
+        }
     </script>
-
 </body>
 </html>
