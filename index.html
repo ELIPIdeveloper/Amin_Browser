@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحه با عکس پس‌زمینه و شناسایی صدا</title>
+    <title>صفحه با شناسایی صدا زنده</title>
     <style>
         body, html {
             margin: 0;
@@ -22,8 +22,8 @@
         }
         .image-container {
             position: absolute;
-            bottom: 1%;
-            width: 50%;
+            bottom: 2%;
+            width: 30%;
         }
         .image-container img {
             width: 100%;
@@ -31,7 +31,6 @@
             cursor: pointer;
         }
         .speech-text {
-            position: absolute;
             text-align: center;
             font-size: 1.5em;
             color: white;
@@ -57,7 +56,6 @@
     <audio id="defaultAudio" src="default.mp3"></audio>
 
     <script>
-        const startSpeechButton = document.getElementById('startSpeech');
         const speechText = document.getElementById('speechText');
         const helloAudio = document.getElementById('helloAudio');
         const defaultAudio = document.getElementById('defaultAudio');
@@ -66,29 +64,55 @@
         function startSpeechRecognition() {
             const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             recognition.lang = 'fa-IR';
-            recognition.start();
+            recognition.continuous = true; // شناسایی صدا به صورت پیوسته
+            recognition.interimResults = true; // نتایج موقت
 
             recognition.onresult = function(event) {
-                const transcript = event.results[0][0].transcript;
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        transcript += event.results[i][0].transcript;
+                    }
+                }
+
                 speechText.textContent = transcript;
 
                 if (transcript.includes('سلام')) {
+                    recognition.stop(); // متوقف کردن شناسایی صدا
                     helloAudio.play();
+                    helloAudio.onended = function() {
+                        startSpeechRecognition(); // دوباره شروع شناسایی صدا
+                    };
                 } else if (transcript.includes('چیست') || transcript.includes('کیست')) {
+                    recognition.stop(); // متوقف کردن شناسایی صدا
                     const query = encodeURIComponent(transcript);
                     window.open(`https://www.google.com/search?q=${query}`, '_blank');
-                } else {
+                    setTimeout(startSpeechRecognition, 3000); // پس از 3 ثانیه دوباره شروع
+                } else if (transcript !== '') {
+                    recognition.stop(); // متوقف کردن شناسایی صدا
                     defaultAudio.play();
+                    defaultAudio.onended = function() {
+                        startSpeechRecognition(); // دوباره شروع شناسایی صدا
+                    };
                 }
             };
 
             recognition.onerror = function(event) {
                 console.error('خطای شناسایی صدا:', event.error);
+                startSpeechRecognition(); // در صورت خطا، دوباره شروع
             };
+
+            recognition.onend = function() {
+                console.log('شناسایی صدا پایان یافت.');
+            };
+
+            recognition.start(); // شروع شناسایی صدا
         }
 
-        // رویداد کلیک بر روی عکس
-        startSpeechButton.addEventListener('click', startSpeechRecognition);
+        // شروع شناسایی صدا بلافاصله بعد از ورود به صفحه
+        window.onload = function() {
+            startSpeechRecognition();
+        };
     </script>
 
 </body>
