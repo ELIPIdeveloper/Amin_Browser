@@ -88,8 +88,10 @@
                     outputText.textContent = transcript;
 
                     if (transcript.includes('سلام')) {
+                        recognition.stop();
                         document.getElementById('greetingSound').play();
                     } else if (transcript.includes('چیست') || transcript.includes('کیست')) {
+                        recognition.stop();
                         const query = encodeURIComponent(transcript.replace(/چیست|کیست/g, '').trim());
                         window.open(`https://www.google.com/search?q=${query}`, '_blank');
                     } else {
