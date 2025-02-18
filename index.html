@@ -3,55 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ویس ریکنگنایز فارسی</title>
+    <title>صفحه با عکس پس‌زمینه و شناسایی صدا</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        body {
+            background-image: url('background.jpg'); /* عکس پس‌زمینه */
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .image-container {
+            position: absolute;
+            bottom: 2%;
+            width: 30%;
+        }
+        .image-container img {
+            width: 100%;
+            height: auto;
+            cursor: pointer;
+        }
+        .speech-text {
+            text-align: center;
+            font-size: 1.5em;
+            color: white;
+            margin-top: 20px;
+        }
+        audio {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <h1>تشخیص صدا و پخش فایل صوتی</h1>
-    <p>بر روی دکمه زیر کلیک کنید تا صدای خود را ثبت کنید:</p>
-    <button onclick="startRecognition()">شروع به صحبت</button>
-    <p id="output"></p>
-    <!-- عنصر audio با display:none پنهان شده است -->
-    <audio id="audioPlayer" style="display:none;">
-        <source src="welcome.mp3" type="audio/mpeg">
-    </audio>
+
+    <!-- عکس پایین صفحه -->
+    <div class="image-container">
+        <img id="startSpeech" src="clickable_image.jpg" alt="Click to Start Speech Recognition">
+    </div>
+
+    <!-- نمایش متن شنیده شده -->
+    <div class="speech-text" id="speechText"></div>
+
+    <!-- صداها -->
+    <audio id="helloAudio" src="hello.mp3"></audio>
+    <audio id="defaultAudio" src="default.mp3"></audio>
 
     <script>
-        let recognition;
+        const startSpeechButton = document.getElementById('startSpeech');
+        const speechText = document.getElementById('speechText');
+        const helloAudio = document.getElementById('helloAudio');
+        const defaultAudio = document.getElementById('defaultAudio');
 
-        function startRecognition() {
-            const output = document.getElementById('output');
-            const audioPlayer = document.getElementById('audioPlayer');
+        // شروع شناسایی صدا
+        function startSpeechRecognition() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'fa-IR';
+            recognition.start();
 
-            // ساخت شیء SpeechRecognition
-            if ('webkitSpeechRecognition' in window) {
-                recognition = new webkitSpeechRecognition();
-                recognition.continuous = false; // تشخیص صدا تنها یک بار انجام می‌شود
-                recognition.interimResults = false;
-                recognition.lang = 'fa-IR'; // زبان فارسی
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                speechText.textContent = transcript;
 
-                // رویداد برای نتایج تشخیص صدا
-                recognition.onresult = function (event) {
-                    const transcript = event.results[0][0].transcript;
-                    output.textContent = `متن تشخیص داده شده: ${transcript}`;
+                if (transcript.includes('سلام')) {
+                    helloAudio.play();
+                } else if (transcript.includes('چیست') || transcript.includes('کیست')) {
+                    const query = encodeURIComponent(transcript);
+                    window.open(`https://www.google.com/search?q=${query}`, '_blank');
+                } else {
+                    defaultAudio.play();
+                }
+            };
 
-                    // بررسی وجود کلمه "سلام"
-                    if (transcript.includes("سلام")) {
-                        // پخش فایل صوتی بدون نمایش عنصر audio
-                        audioPlayer.play();
-                    }
-                };
-
-                // شروع تشخیص صدا
-                recognition.start();
-
-                // پیام هشدار برای متوقف کردن تشخیص صدا
-                recognition.onend = function () {
-                    console.log('تشخیص صدا متوقف شد.');
-                };
-            } else {
-                alert('مرورگر شما پشتیبانی از Speech Recognition نمی‌کند.');
-            }
+            recognition.onerror = function(event) {
+                console.error('خطای شناسایی صدا:', event.error);
+            };
         }
+
+        // رویداد کلیک بر روی عکس
+        startSpeechButton.addEventListener('click', startSpeechRecognition);
     </script>
+
 </body>
 </html>
