@@ -3,103 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحه با شناسایی صدا</title>
+    <title>شناسایی صدا و پاسخگویی</title>
     <style>
-        body, html {
+        /* تنظیمات پس‌زمینه */
+        body {
             margin: 0;
             padding: 0;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        body {
             background: url('background.jpg') no-repeat center center fixed;
             background-size: cover;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
             align-items: center;
-            font-family: Arial, sans-serif;
+            justify-content: flex-end;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        #text-output {
-            text-align: center;
+        /* تنظیمات برای متن نمایش داده شده */
+        #output-text {
             color: white;
-            font-size: 24px;
-            width: 100%;
-            box-sizing: border-box;
-            padding: 10px;
+            font-size: 20px;
+            text-align: center;
+            background-color: black;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            max-width: 80%;
             word-wrap: break-word;
         }
 
-        #microphone {
+        /* تنظیمات عکس میکروفون */
+        #microphone-image {
+            width: 50%;
+            cursor: pointer;
             position: absolute;
             bottom: 1%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 50%;
-            height: auto;
-            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-<div id="text-output"></div>
+    <!-- متن خروجی -->
+    <div id="output-text"></div>
 
-<img id="microphone" src="microphone.png" alt="Microphone">
+    <!-- عکس میکروفون -->
+    <img id="microphone-image" src="microphone.png" alt="میکروفون">
 
-<script>
-    const microphone = document.getElementById('microphone');
-    const textOutput = document.getElementById('text-output');
+    <!-- فایل‌های صوتی -->
+    <audio id="greeting-audio" src="greeting.mp3"></audio>
+    <audio id="default-audio" src="default.mp3"></audio>
 
-    let recognition;
+    <script>
+        // متغیرها برای شناسایی صدا
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        const outputText = document.getElementById('output-text');
+        const microphoneImage = document.getElementById('microphone-image');
+        const greetingAudio = document.getElementById('greeting-audio');
+        const defaultAudio = document.getElementById('default-audio');
 
-    function startRecognition() {
-        if ('webkitSpeechRecognition' in window) {
-            recognition = new webkitSpeechRecognition();
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.lang = 'fa-IR';
+        // تنظیمات شناسایی صدا
+        recognition.continuous = false; // شناسایی صدا تا زمانی که کاربر صحبت می‌کند
+        recognition.interimResults = false; // نتایج موقت نشان داده نمی‌شود
 
-            recognition.addEventListener('result', (event) => {
-                const transcript = event.results[0][0].transcript;
-                textOutput.textContent = transcript;
+        // رویداد کلیک بر روی عکس میکروفون
+        microphoneImage.addEventListener('click', () => {
+            recognition.start(); // شروع شناسایی صدا
+            outputText.textContent = 'در حال شنیدن...'; // نمایش متن در حال شنیدن
+        });
 
-                // متوقف کردن شناسایی صدا بعد از ثبت متن
-                recognition.stop();
+        // رویداد پایان شناسایی صدا
+        recognition.addEventListener('result', (event) => {
+            const transcript = event.results[0][0].transcript; // متن تشخیص داده شده
+            outputText.textContent = transcript; // نمایش متن تشخیص داده شده
+            recognition.stop(); // متوقف کردن شناسایی صدا
 
-                processText(transcript);
-            });
+            // بررسی وجود کلمات خاص
+            if (transcript.includes('سلام')) {
+                greetingAudio.play(); // پخش صدا سلام
+            } else if (transcript.includes('چیست') || transcript.includes('کیست')) {
+                const searchQuery = encodeURIComponent(transcript);
+                window.open(`https://www.google.com/search?q=${searchQuery}`, '_blank'); // باز کردن جستجوی گوگل
+            } else {
+                defaultAudio.play(); // پخش صدا پیش‌فرض
+            }
+        });
 
-            recognition.start();
-        } else {
-            alert('شناسایی صدا در مرورگر شما پشتیبانی نمی‌شود.');
-        }
-    }
-
-    function processText(text) {
-        if (text.includes('سلام')) {
-            playSound('greeting.mp3');
-        } else if (text.includes('چیست') || text.includes('کیست')) {
-            searchGoogle(text);
-        } else {
-            playSound('default.mp3');
-        }
-    }
-
-    function playSound(audioFile) {
-        const audio = new Audio(audioFile);
-        audio.play();
-    }
-
-    function searchGoogle(query) {
-        const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-        window.open(searchUrl, '_blank');
-    }
-
-    microphone.addEventListener('click', startRecognition);
-</script>
+        // رویداد خطای شناسایی صدا
+        recognition.addEventListener('error', (event) => {
+            outputText.textContent = 'خطای شناسایی صدا: ' + event.error;
+        });
+    </script>
 
 </body>
 </html>
