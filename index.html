@@ -24,7 +24,7 @@
 
         #text-box {
             position: absolute;
-            bottom: 60px;
+            bottom: 260px;
             color: white;
             font-size: 20px;
             text-align: center;
@@ -55,7 +55,7 @@
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         
         recognition.lang = 'fa-IR';
-        recognition.interimResults = true;
+        recognition.interimResults = false;
         recognition.maxAlternatives = 1;
         recognition.continuous = false;
 
