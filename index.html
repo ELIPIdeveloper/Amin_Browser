@@ -61,7 +61,7 @@
             audio.onended = () => recognition.start();
         }
 
-        // پردازش متن شناخته شده
+        // تابع پردازش متن شناخته شده
         function processSpeech(text) {
             textBox.innerText = text;
 
@@ -75,33 +75,31 @@
             else playAudio("default.mp3");
         }
 
-        // تعریف متغیر تایمر
-        let recognitionTimeout = null;
+        // تابع برای دریافت نتیجه شناسایی صدا
+        recognition.onresult = (event) => {
+            let text = event.results[0][0].transcript;
+            recognition.stop(); // متوقف کردن شناسایی بعد از دریافت نتیجه
+            clearTimeout(recognitionTimeout); // حذف تایمر اگر نتیجه قبل از 7 ثانیه دریافت شد
+            processSpeech(text);
+        };
 
-        // رویداد شروع شناسایی صدا
+        // تابع برای مدیریت خطاهای شناسایی صدا
+        recognition.onerror = (event) => {
+            recognition.stop();
+            setTimeout(() => recognition.start(), 1000);
+        };
+
+        // تابع برای شروع شناسایی صدا و تنظیم تایمر
         micButton.addEventListener("click", () => {
             recognition.start(); // شروع شناسایی صدا
+
+            // تنظیم تایمر برای متوقف کردن شناسایی پس از 7 ثانیه
             recognitionTimeout = setTimeout(() => {
                 if (recognition && recognition.state === "started") {
-                    recognition.stop(); // متوقف کردن شناسایی صدا پس از 7 ثانیه
+                    recognition.stop(); // متوقف کردن شناسایی صدا
                 }
             }, 7000); // 7000 میلی‌ثانیه = 7 ثانیه
         });
-
-        // رویداد دریافت نتیجه
-        recognition.onresult = (event) => {
-            clearTimeout(recognitionTimeout); // حذف تایمر بعد از دریافت نتیجه
-            let text = event.results[0][0].transcript;
-            recognition.stop(); // متوقف کردن شناسایی صدا
-            processSpeech(text); // پردازش متن شناخته شده
-        };
-
-        // رویداد خطای شناسایی صدا
-        recognition.onerror = (event) => {
-            clearTimeout(recognitionTimeout); // حذف تایمر در صورت خطای شناسایی
-            recognition.stop(); // متوقف کردن شناسایی صدا
-            setTimeout(() => recognition.start(), 1000); // شروع مجدد شناسایی صدا پس از 1 ثانیه
-        };
     </script>
 </body>
 </html>
