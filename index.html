@@ -3,107 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صداشناس</title>
+    <title>Voice Recognition</title>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        body {
             background: url('background.jpg') no-repeat center center fixed;
             background-size: cover;
             display: flex;
-            flex-direction: column;
-            justify-content: space-between;
             align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        #text-box {
+            position: absolute;
+            bottom: 60px;
             color: white;
-            font-family: 'IRANSans', sans-serif;
-        }
-
-        .microphone-container {
-            position: relative;
-            width: 50%;
-            max-width: 400px;
-            margin-bottom: 1%;
-        }
-
-        .microphone-container img {
-            width: 100%;
-            height: auto;
-        }
-
-        #output-text {
+            font-size: 20px;
             text-align: center;
-            margin-bottom: 20px;
+            max-width: 80%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+        }
+
+        #mic-button {
+            position: absolute;
+            bottom: 10px;
+            width: 50%;
+            max-width: 150px;
+            height: auto;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <div class="microphone-container">
-        <img id="microphone" src="microphone.png" alt="میکروفون">
-    </div>
-    <div id="output-text"></div>
+
+    <div id="text-box"></div>
+    <img id="mic-button" src="microphone.png" alt="Microphone">
 
     <script>
+        const textBox = document.getElementById('text-box');
+        const micButton = document.getElementById('mic-button');
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        
         recognition.lang = 'fa-IR';
-        recognition.continuous = false;
         recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+        recognition.continuous = false;
 
-        const outputText = document.getElementById('output-text');
-        const microphone = document.getElementById('microphone');
-
-        recognition.addEventListener('result', (event) => {
-            const transcript = event.results[0][0].transcript;
-            outputText.textContent = `متن شناسایی شده: ${transcript}`;
-            processCommand(transcript);
-            recognition.stop();
-            setTimeout(() => startRecognition(), 1000); // دوباره ریکنگنایز را آغاز می‌کند
-        });
-
-        recognition.addEventListener('end', () => {
-            if (outputText.textContent === '') {
-                setTimeout(() => startRecognition(), 1000);
-            }
-        });
-
-        function startRecognition() {
-            recognition.start();
-        }
-
-        microphone.addEventListener('click', () => {
-            outputText.textContent = 'در حال شناسایی صدا...';
-            startRecognition();
-        });
-
-        function playAudio(audioFile) {
-            const audio = new Audio(audioFile);
+        function playAudio(src) {
+            let audio = new Audio(src);
             audio.play();
+            audio.onended = () => recognition.start();
         }
 
-        function searchGoogle(query) {
-            const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-            window.open(searchUrl, '_blank');
+        function processSpeech(text) {
+            textBox.innerText = text;
+            
+            if (text.includes("سلام")) playAudio("greeting.mp3");
+            else if (/(اسم\s+تو\s+چیه|اسمت\s+چیه|ی\s+هستی|سیری|بیکسپی)/.test(text)) playAudio("Amin.m4a");
+            else if (/(روشن کن|خاموش کن|روشن بکن|خاموش بکن|تنظیم کن|برو تو|باز کن|بزار)/.test(text)) playAudio("On_off_speed.m4a");
+            else if (/(خوبی|چطوری|بهتری|حالت چطوره|حالت خوبه|تو خیلی)/.test(text)) playAudio("Tanks.m4a");
+            else if (text.includes("چه خبر")) playAudio("Slalamati(1).m4a");
+            else if (/(کیر|\*)/.test(text)) playAudio("Foush.m4a");
+            else if (/(چیست|کیست|کجاست|چطوره)/.test(text)) window.open(`https://www.google.com/search?q=${encodeURIComponent(text)}`, "_blank");
+            else playAudio("default.mp3");
         }
 
-        function processCommand(command) {
-            const keywords = command.toLowerCase();
+        recognition.onresult = (event) => {
+            let text = event.results[0][0].transcript;
+            recognition.stop();
+            processSpeech(text);
+        };
 
-            if (keywords.includes('سلام')) {
-                playAudio('greeting.mp3');
-            } else if (keywords.includes('چیه') || keywords.includes('اسم تو چیه') || keywords.includes('ی هستی') || keywords.includes('سیری') || keywords.includes('بیکسپی')) {
-                playAudio('Amin.m4a');
-            } else if (keywords.includes('روشن') || keywords.includes('خاموش') || keywords.includes('تنظیم') || keywords.includes('برو تو') || keywords.includes('باز کن')) {
-                playAudio('On_off_speed.m4a');
-            } else if (keywords.includes('خوبی') || keywords.includes('چطوری') || keywords.includes('بهتری') || keywords.includes('حالت چطوره') || keywords.includes('حالت خوبه') || keywords.includes('تو خیلی')) {
-                playAudio('Tanks.m4a');
-            } else if (keywords.includes('چه خبر')) {
-                playAudio('Slalamati(1).m4a');
-            } else if (keywords.includes('چیست') || keywords.includes('کیست') || keywords.includes('کجاست') || keywords.includes('چطوره')) {
-                searchGoogle(keywords);
-            } else {
-                playAudio('default.mp3');
-            }
-        }
+        recognition.onerror = () => {
+            recognition.stop();
+            setTimeout(() => recognition.start(), 1000);
+        };
+
+        micButton.addEventListener("click", () => {
+            recognition.start();
+        });
     </script>
+
 </body>
 </html>
