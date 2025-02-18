@@ -3,100 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحه شناسایی صوتی</title>
+    <title>Speech Recognition</title>
     <style>
-        /* تنظیمات CSS */
         body, html {
             margin: 0;
             padding: 0;
             height: 100%;
-            overflow: hidden;
-        }
-
-        body {
+            width: 100%;
             background: url('background.jpg') no-repeat center center fixed;
             background-size: cover;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
             align-items: center;
-            font-family: 'Vazir', sans-serif; /* برای فونت فارسی */
-            color: white;
+            justify-content: flex-end;
+            font-family: Arial, sans-serif;
         }
 
-        #microphone {
-            position: absolute;
+        .microphone {
+            position: relative;
             bottom: 1%;
             width: 50%;
             cursor: pointer;
         }
 
-        #output-text {
-            position: absolute;
-            bottom: 10%;
+        .text-output {
+            color: white;
             text-align: center;
             font-size: 1.2em;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-            width: 80%;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
 
-    <!-- عکس مايكروفون -->
-    <img id="microphone" src="microphone.png" alt="مايكروفون">
-
-    <!-- محل نمایش متن شناسایی شده -->
-    <div id="output-text"></div>
+    <div class="text-output" id="outputText"></div>
+    <img src="microphone.png" alt="Microphone" class="microphone" id="microphone">
 
     <script>
-        // متغیرها
-        const outputText = document.getElementById('output-text');
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        const outputText = document.getElementById('outputText');
         const microphone = document.getElementById('microphone');
 
-        // شناسایی صوتی
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'fa-IR'; // زبان فارسی ایران
+        recognition.lang = 'fa-IR';
+        recognition.continuous = false; // تنها یک بار شناسایی صوتی انجام شود
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
 
-        // تابع برای پخش صدا
-        function playAudio(audioFile) {
+        // فعال‌سازی شناسایی صوتی با کلیک روی عکس میکروفون
+        microphone.addEventListener('click', () => {
+            outputText.textContent = '...در حال شناسایی';
+            recognition.start();
+        });
+
+        // بررسی نتایج شناسایی صوتی
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            outputText.textContent = `متن شناسایی شده: ${transcript}`;
+
+            // بررسی کلمات خاص
+            if (transcript.includes('سلام')) {
+                playSound('greeting.mp3');
+            } else if (transcript.includes('چه') || transcript.includes('اسم تو چیه') || transcript.includes('کی هستی') || transcript.includes('سیری') || transcript.includes('بیکسپی')) {
+                playSound('Amin.m4a');
+            } else if (transcript.includes('چیست') || transcript.includes('کیست')) {
+                searchGoogle(transcript);
+            } else {
+                playSound('default.mp3');
+            }
+
+            recognition.stop(); // متوقف کردن شناسایی صوتی پس از 10 ثانیه
+        };
+
+        // ایجاد صدا
+        function playSound(audioFile) {
             const audio = new Audio(audioFile);
             audio.play();
         }
 
-        // تابع برای جستجو در گوگل
+        // جستجوی گوگل
         function searchGoogle(query) {
-            const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-            window.open(searchUrl, '_blank');
+            const searchQuery = query.replace(/ /g, '+');
+            window.open(`https://www.google.com/search?q=${searchQuery}`, '_blank');
         }
 
-        // حالت شروع شناسایی صوتی
-        microphone.addEventListener('click', () => {
-            outputText.textContent = ''; // پاک کردن متن قبلی
-            recognition.start();
-        });
-
-        // رویداد شناسایی صوتی
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript.trim(); // متن شناسایی شده
-            outputText.textContent = transcript;
-
-            // بررسی وجود کلمات خاص
-            if (transcript.includes('سلام')) {
-                playAudio('greeting.mp3'); // پخش صدا سلام
-            } else if (transcript.includes('چیست') || transcript.includes('کیست')) {
-                searchGoogle(transcript); // جستجو در گوگل
-            } else {
-                playAudio('default.mp3'); // پخش صدا پیشفرض
-            }
-
-            recognition.stop(); // متوقف کردن شناسایی صوتی
-        };
-
-        // رویداد خطای شناسایی صوتی
+        // مدیریت خطاهای شناسایی صوتی
         recognition.onerror = (event) => {
             console.error('خطای شناسایی صوتی:', event.error);
+            outputText.textContent = 'خطای شناسایی صوتی!';
+        };
+
+        // محدود کردن مدت زمان شناسایی صوتی به 10 ثانیه
+        recognition.onend = () => {
+            outputText.textContent += ' - شناسایی صوتی متوقف شد.';
         };
     </script>
 
