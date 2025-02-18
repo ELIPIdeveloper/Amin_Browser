@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voice Recognition</title>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
         * {
             margin: 0;
@@ -39,12 +40,22 @@
             bottom: 10px;
             width: 50px;
             height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
+            transition: background 0.3s;
         }
 
-        #mic-button img {
-            width: 100%;
-            height: auto;
+        #mic-button:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        #mic-button i {
+            font-size: 24px;
+            color: white;
         }
     </style>
 </head>
@@ -52,67 +63,57 @@
 
     <div id="text-box"></div>
     <div id="mic-button">
-        <img src="microphone.png" alt="Microphone">
+        <i class="fas fa-microphone"></i>
     </div>
 
     <script>
         const textBox = document.getElementById('text-box');
         const micButton = document.getElementById('mic-button');
-        let recognition;
-        let timeout;
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        
+        recognition.lang = 'fa-IR';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+        recognition.continuous = false;
+        recognition.timeout = 7000; // مدت زمان حداکثر شناسایی صدا (۷ ثانیه)
 
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = 'fa-IR';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-            recognition.continuous = false;
-
-            function playAudio(src) {
-                let audio = new Audio(src);
-                audio.play();
-                audio.onended = () => startRecognition();
-            }
-
-            function processSpeech(text) {
-                textBox.innerText = text;
-                
-                if (text.includes("سلام")) playAudio("greeting.mp3");
-                else if (/(اسم\s+تو\s+چیه|اسمت\s+چیه|ی\s+هستی|سیری|بیکسپی)/.test(text)) playAudio("Amin.m4a");
-                else if (/(روشن کن|خاموش کن|روشن بکن|خاموش بکن|تنظیم کن|برو تو|باز کن|بزار)/.test(text)) playAudio("On_off_speed.m4a");
-                else if (/(خوبی|چطوری|بهتری|حالت چطوره|حالت خوبه|تو خیلی)/.test(text)) playAudio("Tanks.m4a");
-                else if (text.includes("چه خبر")) playAudio("Slalamati(1).m4a");
-                else if (/(کیر|\*)/.test(text)) playAudio("Foush.m4a");
-                else if (/(چیست|کیست|کجاست|چطوره)/.test(text)) window.open(`https://www.google.com/search?q=${encodeURIComponent(text)}`, "_blank");
-                else playAudio("default.mp3");
-            }
-
-            recognition.onresult = (event) => {
-                let text = event.results[0][0].transcript;
-                recognition.stop();
-                processSpeech(text);
-            };
-
-            recognition.onerror = () => {
-                recognition.stop();
-                clearTimeout(timeout);
-                setTimeout(() => startRecognition(), 1000);
-            };
-
-            function startRecognition() {
-                recognition.start();
-                timeout = setTimeout(() => {
-                    recognition.stop();
-                }, 7000);
-            }
-
-            micButton.addEventListener("click", () => {
-                startRecognition();
-            });
-
-        } else {
-            alert("مرورگر شما از تشخیص گفتار پشتیبانی نمی‌کند.");
+        function playAudio(src) {
+            let audio = new Audio(src);
+            audio.play();
+            audio.onended = () => recognition.start();
         }
+
+        function processSpeech(text) {
+            textBox.innerText = text;
+            
+            if (text.includes("سلام")) playAudio("greeting.mp3");
+            else if (/(اسم\s+تو\s+چیه|اسمت\s+چیه|ی\s+هستی|سیری|بیکسپی)/.test(text)) playAudio("Amin.m4a");
+            else if (/(روشن کن|خاموش کن|روشن بکن|خاموش بکن|تنظیم کن|برو تو|باز کن|بزار)/.test(text)) playAudio("On_off_speed.m4a");
+            else if (/(خوبی|چطوری|بهتری|حالت چطوره|حالت خوبه|تو خیلی)/.test(text)) playAudio("Tanks.m4a");
+            else if (text.includes("چه خبر")) playAudio("Slalamati(1).m4a");
+            else if (/(کیر|\*)/.test(text)) playAudio("Foush.m4a");
+            else if (/(چیست|کیست|کجاست|چطوره)/.test(text)) window.open(`https://www.google.com/search?q=${encodeURIComponent(text)}`, "_blank");
+            else playAudio("default.mp3");
+        }
+
+        recognition.onresult = (event) => {
+            let text = event.results[0][0].transcript;
+            recognition.stop();
+            processSpeech(text);
+        };
+
+        recognition.onerror = () => {
+            recognition.stop();
+            setTimeout(() => recognition.start(), 1000);
+        };
+
+        recognition.onspeechend = () => {
+            recognition.stop();
+        };
+
+        micButton.addEventListener("click", () => {
+            recognition.start();
+        });
     </script>
 
 </body>
