@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحه با شناسایی صدا زنده</title>
+    <title>صفحه با شناسایی صدا</title>
     <style>
         body, html {
             margin: 0;
@@ -56,11 +56,12 @@
     <audio id="defaultAudio" src="default.mp3"></audio>
 
     <script>
+        const startSpeechButton = document.getElementById('startSpeech');
         const speechText = document.getElementById('speechText');
         const helloAudio = document.getElementById('helloAudio');
         const defaultAudio = document.getElementById('defaultAudio');
 
-        // شروع شناسایی صدا
+        // تابع شروع شناسایی صدا
         function startSpeechRecognition() {
             const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             recognition.lang = 'fa-IR';
@@ -78,8 +79,8 @@
                 speechText.textContent = transcript;
 
                 if (transcript.includes('سلام')) {
+                    recognition.stop(); // متوقف کردن شناسایی صدا
                     helloAudio.play();
-                    recognition.stop(); // متوقف کردن شناسایی صد
                     helloAudio.onended = function() {
                         startSpeechRecognition(); // دوباره شروع شناسایی صدا
                     };
@@ -109,10 +110,8 @@
             recognition.start(); // شروع شناسایی صدا
         }
 
-        // شروع شناسایی صدا بلافاصله بعد از ورود به صفحه
-        window.onload = function() {
-            startSpeechRecognition();
-        };
+        // رویداد کلیک بر روی عکس
+        startSpeechButton.addEventListener('click', startSpeechRecognition);
     </script>
 
 </body>
