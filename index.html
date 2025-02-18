@@ -95,7 +95,7 @@
                         const query = encodeURIComponent(transcript.replace(/چیست|کیست/g, '').trim());
                         window.open(`https://www.google.com/search?q=${query}`, '_blank');
                     } else {
-                        if (!transcript.includes('') || !transcript.includes(' ')) {
+                        if (transcript !== '') || !transcript !== ' ')) {
                             document.getElementById('defaultSound').play();
                            } 
                     }
