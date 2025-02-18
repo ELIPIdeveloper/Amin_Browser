@@ -10,84 +10,78 @@
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             background: url('background.jpg') no-repeat center center fixed;
             background-size: cover;
             display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
+            justify-content: center;
             align-items: center;
             height: 100vh;
             overflow: hidden;
         }
-
-        #text-box {
+        #container {
+            position: absolute;
+            bottom: 5%;
             width: 100%;
-            min-height: 50px;
-            background: black;
-            color: white;
             text-align: center;
-            font-size: 24px;
-            padding: 10px;
-            position: absolute;
-            bottom: calc(50px + 1%);
         }
-
-        #mic-button {
+        #result {
+            color: white;
+            font-size: 24px;
+            background: black;
+            padding: 10px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        #mic {
             width: 50%;
-            position: absolute;
-            bottom: 1%;
+            height: auto;
             cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <div id="text-box"></div>
-    <img src="microphone.png" id="mic-button" alt="Microphone">
+    <div id="container">
+        <div id="result"></div>
+        <br>
+        <img id="mic" src="microphone.png" alt="Microphone">
+    </div>
+
+    <audio id="greeting" src="greeting.mp3"></audio>
+    <audio id="default" src="default.mp3"></audio>
 
     <script>
-        const micButton = document.getElementById('mic-button');
-        const textBox = document.getElementById('text-box');
+        const micButton = document.getElementById("mic");
+        const resultDiv = document.getElementById("result");
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        
+        recognition.lang = "fa-IR";
+        recognition.interimResults = false;
+        recognition.continuous = false;
 
-        // پخش صدا
-        function playAudio(file) {
-            let audio = new Audio(file);
-            audio.play();
-        }
-
-        // تشخیص گفتار
-        function startRecognition() {
-            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = 'fa-IR';
-            recognition.interimResults = false;
-
-            recognition.onresult = function(event) {
-                let transcript = event.results[0][0].transcript;
-                textBox.textContent = transcript;
-
-                if (transcript.includes("سلام")) {
-                    playAudio("greeting.mp3");
-                } else if (transcript.includes("چیست") || transcript.includes("کیست")) {
-                    window.open("https://www.google.com/search?q=" + encodeURIComponent(transcript), "_blank");
-                } else {
-                    playAudio("default.mp3");
-                }
-
-                recognition.stop();
-            };
-
-            recognition.onerror = function() {
-                textBox.textContent = "خطا در تشخیص صدا";
-                recognition.stop();
-            };
-
+        micButton.addEventListener("click", () => {
+            resultDiv.textContent = "در حال گوش دادن...";
             recognition.start();
-        }
+        });
 
-        // رویداد کلیک دکمه میکروفون
-        micButton.addEventListener('click', startRecognition);
+        recognition.onresult = (event) => {
+            const text = event.results[0][0].transcript;
+            resultDiv.textContent = text;
+            recognition.stop();
+
+            if (text.includes("سلام")) {
+                document.getElementById("greeting").play();
+            } else if (text.includes("چیست") || text.includes("کیست")) {
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(text)}`, "_blank");
+            } else {
+                document.getElementById("default").play();
+            }
+        };
+
+        recognition.onerror = (event) => {
+            resultDiv.textContent = "خطا در تشخیص صدا";
+        };
     </script>
 
 </body>
