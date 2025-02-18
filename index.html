@@ -3,95 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>شناسایی صدا و پاسخگویی</title>
+    <title>Voice Recognition</title>
     <style>
-        /* تنظیمات پس‌زمینه */
-        body {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
             background: url('background.jpg') no-repeat center center fixed;
             background-size: cover;
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: flex-end;
+            align-items: center;
             height: 100vh;
             overflow: hidden;
         }
 
-        /* تنظیمات برای متن نمایش داده شده */
-        #output-text {
+        #text-box {
+            width: 100%;
+            min-height: 50px;
+            background: black;
             color: white;
-            font-size: 20px;
             text-align: center;
-            background-color: black;
-            padding: 10px 20px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            max-width: 80%;
-            word-wrap: break-word;
+            font-size: 24px;
+            padding: 10px;
+            position: absolute;
+            bottom: calc(50px + 1%);
         }
 
-        /* تنظیمات عکس میکروفون */
-        #microphone-image {
+        #mic-button {
             width: 50%;
-            cursor: pointer;
             position: absolute;
             bottom: 1%;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <!-- متن خروجی -->
-    <div id="output-text"></div>
-
-    <!-- عکس میکروفون -->
-    <img id="microphone-image" src="microphone.png" alt="میکروفون">
-
-    <!-- فایل‌های صوتی -->
-    <audio id="greeting-audio" src="greeting.mp3"></audio>
-    <audio id="default-audio" src="default.mp3"></audio>
+    <div id="text-box"></div>
+    <img src="microphone.png" id="mic-button" alt="Microphone">
 
     <script>
-        // متغیرها برای شناسایی صدا
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        const outputText = document.getElementById('output-text');
-        const microphoneImage = document.getElementById('microphone-image');
-        const greetingAudio = document.getElementById('greeting-audio');
-        const defaultAudio = document.getElementById('default-audio');
+        const micButton = document.getElementById('mic-button');
+        const textBox = document.getElementById('text-box');
 
-        // تنظیمات شناسایی صدا
-        recognition.continuous = false; // شناسایی صدا تا زمانی که کاربر صحبت می‌کند
-        recognition.interimResults = false; // نتایج موقت نشان داده نمی‌شود
+        // پخش صدا
+        function playAudio(file) {
+            let audio = new Audio(file);
+            audio.play();
+        }
 
-        // رویداد کلیک بر روی عکس میکروفون
-        microphoneImage.addEventListener('click', () => {
-            recognition.start(); // شروع شناسایی صدا
-            outputText.textContent = 'در حال شنیدن...'; // نمایش متن در حال شنیدن
-        });
+        // تشخیص گفتار
+        function startRecognition() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'fa-IR';
+            recognition.interimResults = false;
 
-        // رویداد پایان شناسایی صدا
-        recognition.addEventListener('result', (event) => {
-            const transcript = event.results[0][0].transcript; // متن تشخیص داده شده
-            outputText.textContent = transcript; // نمایش متن تشخیص داده شده
-            recognition.stop(); // متوقف کردن شناسایی صدا
+            recognition.onresult = function(event) {
+                let transcript = event.results[0][0].transcript;
+                textBox.textContent = transcript;
 
-            // بررسی وجود کلمات خاص
-            if (transcript.includes('سلام')) {
-                greetingAudio.play(); // پخش صدا سلام
-            } else if (transcript.includes('چیست') || transcript.includes('کیست')) {
-                const searchQuery = encodeURIComponent(transcript);
-                window.open(`https://www.google.com/search?q=${searchQuery}`, '_blank'); // باز کردن جستجوی گوگل
-            } else {
-                defaultAudio.play(); // پخش صدا پیش‌فرض
-            }
-        });
+                if (transcript.includes("سلام")) {
+                    playAudio("greeting.mp3");
+                } else if (transcript.includes("چیست") || transcript.includes("کیست")) {
+                    window.open("https://www.google.com/search?q=" + encodeURIComponent(transcript), "_blank");
+                } else {
+                    playAudio("default.mp3");
+                }
 
-        // رویداد خطای شناسایی صدا
-        recognition.addEventListener('error', (event) => {
-            outputText.textContent = 'خطای شناسایی صدا: ' + event.error;
-        });
+                recognition.stop();
+            };
+
+            recognition.onerror = function() {
+                textBox.textContent = "خطا در تشخیص صدا";
+                recognition.stop();
+            };
+
+            recognition.start();
+        }
+
+        // رویداد کلیک دکمه میکروفون
+        micButton.addEventListener('click', startRecognition);
     </script>
 
 </body>
