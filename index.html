@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voice Recognition</title>
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
         * {
             margin: 0;
@@ -38,27 +37,22 @@
         #mic-button {
             position: absolute;
             bottom: 10px;
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 50px;
+            height: 50px;
             cursor: pointer;
         }
 
-        #mic-button i {
-            font-size: 24px;
-            color: white;
+        #mic-button img {
+            width: 100%;
+            height: auto;
         }
     </style>
 </head>
 <body>
-    <img id="mic-button" src="microphone.png" alt="Microphone">
+
     <div id="text-box"></div>
     <div id="mic-button">
-        <i class="fas fa-microphone"></i>
+        <img src="microphone.png" alt="Microphone">
     </div>
 
     <script>
@@ -72,12 +66,12 @@
             recognition.lang = 'fa-IR';
             recognition.interimResults = false;
             recognition.maxAlternatives = 1;
-            recognition.continuous = false;  // جلوگیری از اجرای نامحدود
+            recognition.continuous = false;
 
             function playAudio(src) {
                 let audio = new Audio(src);
                 audio.play();
-                audio.onended = () => startRecognition();  // شروع مجدد بعد از پایان صدا
+                audio.onended = () => startRecognition();
             }
 
             function processSpeech(text) {
@@ -109,7 +103,7 @@
                 recognition.start();
                 timeout = setTimeout(() => {
                     recognition.stop();
-                }, 7000);  // **قطع شدن بعد از 7 ثانیه**
+                }, 7000);
             }
 
             micButton.addEventListener("click", () => {
