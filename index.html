@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Recognition</title>
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <title>دستیار صوتی امین</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             background: url('background.jpg') no-repeat center center fixed;
             background-size: cover;
@@ -22,70 +20,51 @@
             overflow: hidden;
             flex-direction: column;
         }
-
         #text-box {
             position: absolute;
-            bottom: 80px;
+            bottom: 100px;
             color: white;
-            font-size: 20px;
+            font-size: 30px;
             text-align: center;
             max-width: 80%;
             padding: 10px;
             background: rgba(0, 0, 0, 0.5);
             border-radius: 10px;
         }
-
         #mic-button {
             position: absolute;
-            bottom: 10px;
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            bottom: 7px;
+            width: 50%;
+            max-width: 300px;
+            height: auto;
             cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        #mic-button:hover {
-            background: rgba(255, 255, 255, 0.4);
-        }
-
-        #mic-button i {
-            font-size: 24px;
-            color: white;
         }
     </style>
 </head>
 <body>
-
     <div id="text-box"></div>
-    <div id="mic-button">
-        <i class="fas fa-microphone"></i>
-    </div>
-
+    <img id="mic-button" src="microphone.png" alt="Microphone">
     <script>
         const textBox = document.getElementById('text-box');
         const micButton = document.getElementById('mic-button');
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        
+
         recognition.lang = 'fa-IR';
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
         recognition.continuous = false;
-        recognition.timeout = 7000; // مدت زمان حداکثر شناسایی صدا (۷ ثانیه)
 
+        // تابع پخش صدا
         function playAudio(src) {
             let audio = new Audio(src);
             audio.play();
             audio.onended = () => recognition.start();
         }
 
+        // پردازش متن شناخته شده
         function processSpeech(text) {
             textBox.innerText = text;
-            
+
             if (text.includes("سلام")) playAudio("greeting.mp3");
             else if (/(اسم\s+تو\s+چیه|اسمت\s+چیه|ی\s+هستی|سیری|بیکسپی)/.test(text)) playAudio("Amin.m4a");
             else if (/(روشن کن|خاموش کن|روشن بکن|خاموش بکن|تنظیم کن|برو تو|باز کن|بزار)/.test(text)) playAudio("On_off_speed.m4a");
@@ -96,25 +75,33 @@
             else playAudio("default.mp3");
         }
 
-        recognition.onresult = (event) => {
-            let text = event.results[0][0].transcript;
-            recognition.stop();
-            processSpeech(text);
-        };
+        // تعریف متغیر تایمر
+        let recognitionTimeout = null;
 
-        recognition.onerror = () => {
-            recognition.stop();
-            setTimeout(() => recognition.start(), 1000);
-        };
-
-        recognition.onspeechend = () => {
-            recognition.stop();
-        };
-
+        // رویداد شروع شناسایی صدا
         micButton.addEventListener("click", () => {
-            recognition.start();
+            recognition.start(); // شروع شناسایی صدا
+            recognitionTimeout = setTimeout(() => {
+                if (recognition && recognition.state === "started") {
+                    recognition.stop(); // متوقف کردن شناسایی صدا پس از 7 ثانیه
+                }
+            }, 7000); // 7000 میلی‌ثانیه = 7 ثانیه
         });
-    </script>
 
+        // رویداد دریافت نتیجه
+        recognition.onresult = (event) => {
+            clearTimeout(recognitionTimeout); // حذف تایمر بعد از دریافت نتیجه
+            let text = event.results[0][0].transcript;
+            recognition.stop(); // متوقف کردن شناسایی صدا
+            processSpeech(text); // پردازش متن شناخته شده
+        };
+
+        // رویداد خطای شناسایی صدا
+        recognition.onerror = (event) => {
+            clearTimeout(recognitionTimeout); // حذف تایمر در صورت خطای شناسایی
+            recognition.stop(); // متوقف کردن شناسایی صدا
+            setTimeout(() => recognition.start(), 1000); // شروع مجدد شناسایی صدا پس از 1 ثانیه
+        };
+    </script>
 </body>
 </html>
