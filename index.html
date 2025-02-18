@@ -78,8 +78,8 @@
                 speechText.textContent = transcript;
 
                 if (transcript.includes('سلام')) {
-                    recognition.stop(); // متوقف کردن شناسایی صدا
                     helloAudio.play();
+                    recognition.stop(); // متوقف کردن شناسایی صد
                     helloAudio.onended = function() {
                         startSpeechRecognition(); // دوباره شروع شناسایی صدا
                     };
