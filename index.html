@@ -3,105 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Recognition</title>
+    <title>صفحه شناسایی صوت</title>
     <style>
-        * {
+        /* تنظیمات پس‌زمینه */
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            background: url('background.jpg') no-repeat center center fixed;
-            background-size: cover;
             display: flex;
             flex-direction: column;
-            justify-content: flex-end;
             align-items: center;
+            justify-content: center;
             height: 100vh;
-            color: white;
-            font-size: 24px;
-            text-align: center;
+            background-color: black;
+            overflow: hidden;
         }
-        #text {
-            margin-bottom: 60px;
+
+        /* انیمیشن ورود برای پس‌زمینه */
+        .background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('background.jpg');
+            background-size: cover;
+            background-position: center;
+            animation: fadeIn 2s ease-in-out;
         }
-        #mic {
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* تنظیمات میکروفون */
+        #microphone {
             width: 50%;
-            max-width: 150px;
-            height: auto;
-            position: fixed;
-            bottom: 1%;
-            cursor: pointer;
+            max-width: 300px;
+            position: absolute;
+            bottom: 6%;
+            animation: slideUp 2s ease-in-out;
         }
-        audio {
-            display: none;
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* تنظیمات متن شناسایی شده */
+        .text {
+            color: white;
+            font-size: 20px;
+            text-align: center;
+            position: absolute;
+            bottom: 12%;
+            width: 100%;
+            animation: fadeText 2s ease-in-out;
+        }
+
+        @keyframes fadeText {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="text"></div>
-    <img id="mic" src="microphone.png" alt="Microphone">
+    <!-- عکس پس‌زمینه -->
+    <div class="background"></div>
+
+    <!-- عکس میکروفون -->
+    <img id="microphone" src="microphone.png" alt="میکروفون" onclick="startRecognition()">
+
+    <!-- نمایش متن شناسایی شده -->
+    <div id="recognized-text" class="text"></div>
+
+    <!-- فایل‌های صوتی -->
+    <audio id="greeting" src="greeting.mp3"></audio>
+    <audio id="amin" src="Amin.m4a"></audio>
+    <audio id="on_off_speed" src="On_off_speed.m4a"></audio>
+    <audio id="thanks" src="Tanks.m4a"></audio>
+    <audio id="slalamati" src="Slalamati(1).m4a"></audio>
+    <audio id="foush" src="Foush.m4a"></audio>
+    <audio id="default" src="default.mp3"></audio>
 
     <script>
-        const mic = document.getElementById("mic");
-        const textDiv = document.getElementById("text");
+        let recognition;
 
         function startRecognition() {
-            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = "fa-IR";
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-            
-            recognition.onresult = function(event) {
-                let result = event.results[0][0].transcript;
-                textDiv.textContent = result;
-                playAudioBasedOnText(result);
-            };
+            if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.lang = 'fa-IR'; // زبان فارسی
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
 
-            recognition.onerror = function() {
-                restartRecognition();
-            };
+                recognition.start();
 
-            recognition.onend = function() {
-                setTimeout(restartRecognition, 500);
-            };
+                recognition.onresult = function (event) {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById("recognized-text").textContent = transcript;
 
-            recognition.start();
+                    // متوقف کردن شناسایی بعد از 5 ثانیه
+                    setTimeout(() => {
+                        recognition.stop();
+                    }, 5000);
 
-            setTimeout(() => recognition.stop(), 5000);
-        }
+                    processTranscript(transcript);
+                };
 
-        function restartRecognition() {
-            setTimeout(startRecognition, 1000);
-        }
+                recognition.onerror = function (event) {
+                    console.error("خطا در شناسایی صدا:", event.error);
+                };
 
-        function playAudioBasedOnText(text) {
-            let audioSrc = "default.mp3";
-
-            if (text.includes("سلام")) {
-                audioSrc = "greeting.mp3";
-            } else if (text.match(/(اسمت چیه|اسم تو چیه|ی هستی|سیری|بیکسپی)/)) {
-                audioSrc = "Amin.m4a";
-            } else if (text.match(/(روشن کن|خاموش کن|روشن بکن|خاموش بکن|تنظیم کن|برو تو|باز کن|بزار|بزن)/)) {
-                audioSrc = "On_off_speed.m4a";
-            } else if (text.match(/(خوبی|چطوری|بهتری|حالت چطوره|حالت خوبه|تو خیلی)/)) {
-                audioSrc = "Tanks.m4a";
-            } else if (text.includes("چه خبر")) {
-                audioSrc = "Slalamati(1).m4a";
-            } else if (text.match(/(کیر|\*)/)) {
-                audioSrc = "Foush.m4a";
-            } else if (text.match(/(چیست|کیست|کجاست|چطوره)/)) {
-                window.open(`https://www.google.com/search?q=${text}`, "_blank");
-                return;
+                recognition.onend = function () {
+                    setTimeout(startRecognition, 500); // دوباره شروع به شناسایی
+                };
+            } else {
+                alert("شناسایی صدا در مرورگر شما پشتیبانی نمی‌شود.");
             }
-
-            let audio = new Audio(audioSrc);
-            audio.play();
-            audio.onended = restartRecognition;
-            audio.onerror = restartRecognition;
         }
 
-        mic.addEventListener("click", startRecognition);
+        function processTranscript(transcript) {
+            const greetingAudio = document.getElementById("greeting");
+            const aminAudio = document.getElementById("amin");
+            const onOffSpeedAudio = document.getElementById("on_off_speed");
+            const thanksAudio = document.getElementById("thanks");
+            const slalamatiAudio = document.getElementById("slalamati");
+            const foushAudio = document.getElementById("foush");
+            const defaultAudio = document.getElementById("default");
+
+            if (transcript.includes("سلام")) {
+                greetingAudio.play();
+            } else if (
+                transcript.includes("چیه") ||
+                transcript.includes("اسم تو چیه") ||
+                transcript.includes("ی هستی") ||
+                transcript.includes("سیری") ||
+                transcript.includes("بیکسپی")
+            ) {
+                aminAudio.play();
+            } else if (
+                transcript.includes("روشن کن") ||
+                transcript.includes("خاموش کن") ||
+                transcript.includes("تنظیم کن") ||
+                transcript.includes("برو تو") ||
+                transcript.includes("بزن")
+            ) {
+                onOffSpeedAudio.play();
+            } else if (
+                transcript.includes("خوبی") ||
+                transcript.includes("چطوری") ||
+                transcript.includes("بهتری") ||
+                transcript.includes("حالت چطوره") ||
+                transcript.includes("تو خیلی")
+            ) {
+                thanksAudio.play();
+            } else if (transcript.includes("چه خبر")) {
+                slalamatiAudio.play();
+            } else if (transcript.includes("کیر") || transcript.includes("*")) {
+                foushAudio.play();
+            } else if (
+                transcript.includes("چیست") ||
+                transcript.includes("کیست") ||
+                transcript.includes("کجاست") ||
+                transcript.includes("چطوره")
+            ) {
+                searchGoogle(transcript);
+            } else {
+                defaultAudio.play();
+            }
+        }
+
+        function searchGoogle(query) {
+            const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+            window.open(searchUrl, "_blank");
+        }
     </script>
 </body>
 </html>
