@@ -3,142 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحه ریکنگنایز</title>
+    <title>Voice Recognition</title>
     <style>
-        /* تنظیمات کلی */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             background: url('background.jpg') no-repeat center center fixed;
             background-size: cover;
-            background-color: black; /* اگر عکس نداشت، رنگ پس‌زمینه سیاه باشد */
-            font-family: 'Vazir', sans-serif;
-            color: white;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: flex-end;
+            justify-content: center;
             height: 100vh;
-            overflow: hidden;
-            animation: fadeIn 2s ease-in-out;
+            flex-direction: column;
+            color: white;
+            text-align: center;
+            font-size: 24px;
+            font-family: Arial, sans-serif;
+            opacity: 0;
+            animation: fadeIn 1.5s forwards;
         }
-
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
-
-        /* عکس میکروفون */
-        .microphone {
+        #text {
+            margin-bottom: 20px;
+        }
+        #microphone {
             width: 50%;
-            max-width: 300px;
-            position: relative;
+            max-width: 200px;
+            height: auto;
+            position: fixed;
             bottom: 1%;
             cursor: pointer;
-            transition: transform 0.3s ease;
         }
-
-        .microphone:hover {
-            transform: scale(1.1);
-        }
-
-        /* نمایش متن */
-        .output-text {
-            text-align: center;
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            word-wrap: break-word;
+        audio {
+            display: none;
         }
     </style>
 </head>
 <body>
-
-    <!-- متن خروجی -->
-    <div class="output-text" id="outputText"></div>
-
-    <!-- عکس میکروفون -->
-    <img src="microphone.png" alt="میکروفون" class="microphone" id="microphone">
+    <div id="text">برای شروع روی میکروفون کلیک کنید</div>
+    <img id="microphone" src="microphone.png" onclick="startRecognition()">
+    <audio id="audioPlayer"></audio>
 
     <script>
-        // متغیرها
-        const microphone = document.getElementById('microphone');
-        const outputText = document.getElementById('outputText');
-
-        let recognition;
-
-        // تابع برای شروع ریکنگنایز
         function startRecognition() {
-            if ('webkitSpeechRecognition' in window) {
-                recognition = new webkitSpeechRecognition();
-                recognition.continuous = false;
-                recognition.interimResults = false;
-                recognition.lang = 'fa-IR';
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'fa-IR';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
 
-                recognition.onresult = function (event) {
-                    const speechResult = event.results[0][0].transcript;
-                    outputText.textContent = speechResult;
-                    processSpeech(speechResult);
-                };
+            recognition.onresult = function(event) {
+                let text = event.results[0][0].transcript.trim();
+                document.getElementById("text").innerText = text;
+                playAudio(text);
+            };
 
-                recognition.onerror = function (event) {
-                    console.error('خطای ریکنگنایز:', event.error);
-                };
+            recognition.onerror = function(event) {
+                document.getElementById("text").innerText = "خطا در تشخیص صدا";
+            };
 
-                recognition.start();
-                setTimeout(() => recognition.stop(), 5000); // بعد از 5 ثانیه متوقف می‌شود
-            } else {
-                alert('ریکنگنایز صوتی در مرورگر شما پشتیبانی نمی‌شود.');
-            }
+            recognition.start();
+            setTimeout(() => recognition.stop(), 5000);
         }
 
-        // پردازش متن
-        function processSpeech(text) {
-            const keywords = [
-                { keyword: /سلام|چطوری|بهتری/gi, audio: 'greeting.mp3' },
-                { keyword: /چیه|اسم تو چیه|ی هستی|سیری|بیکسپی/gi, audio: 'Amin.m4a' },
-                { keyword: /روشن کن|خاموش کن|تنظیم کن|برو تو|باز کن|بزار|بزن/gi, audio: 'On_off_speed.m4a' },
-                { keyword: /خوبی|چطوری|بهتری|حالت چطوره|حالت خوبه|تو خیلی/gi, audio: 'Tanks.m4a' },
-                { keyword: /چه خبر/gi, audio: 'Slalamati(1).m4a' },
-                { keyword: /کیر|\*/gi, audio: 'Foush.m4a' },
-                { keyword: /چیست|کیست|کجاست|چطوره/gi, action: 'search' },
-            ];
+        function playAudio(text) {
+            let audioSrc = "default.mp3"; 
 
-            let matched = false;
-
-            for (const item of keywords) {
-                if (item.keyword.test(text)) {
-                    if (item.action === 'search') {
-                        window.open(`https://www.google.com/search?q=${encodeURIComponent(text)}`, '_blank');
-                    } else {
-                        playAudio(item.audio);
-                    }
-                    matched = true;
-                    break;
-                }
+            if (text.includes("سلام")) audioSrc = "greeting.mp3";
+            else if (text.match(/اسم[ت| تو] چیه|کی هستی|ی هستی|سیری|بیکسپی/)) audioSrc = "Amin.m4a";
+            else if (text.match(/روشن کن|خاموش کن|روشن بکن|خاموش بکن|تنظیم کن|برو تو|باز کن|بزار|بزن/)) audioSrc = "On_off_speed.m4a";
+            else if (text.match(/خوبی|چطوری|بهتری|حالت چطوره|حالت خوبه|تو خیلی/)) audioSrc = "Tanks.m4a";
+            else if (text.includes("چه خبر")) audioSrc = "Slalamati(1).m4a";
+            else if (text.match(/کیر|\*/)) audioSrc = "Foush.m4a";
+            else if (text.match(/چیست|کیست|کجاست|چطوره/)) {
+                window.open("https://www.google.com/search?q=" + encodeURIComponent(text), "_blank");
+                return;
             }
 
-            if (!matched) {
-                playAudio('default.mp3');
-            }
-        }
+            let audioPlayer = document.getElementById("audioPlayer");
+            audioPlayer.src = audioSrc;
+            audioPlayer.play();
 
-        // پخش صدا
-        function playAudio(audioFile) {
-            const audio = new Audio(audioFile);
-            audio.play().then(() => {
-                setTimeout(() => startRecognition(), audio.duration * 1000);
-            }).catch(error => {
-                console.error('خطای پخش صدا:', error);
-            });
+            audioPlayer.onended = () => startRecognition();
         }
-
-        // رویداد کلیک بر روی میکروفون
-        microphone.addEventListener('click', startRecognition);
     </script>
-
 </body>
 </html>
