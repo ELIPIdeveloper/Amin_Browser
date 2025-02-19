@@ -1,18 +1,17 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="fa">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تشخیص صدا</title>
+    <title>Voice Recognition</title>
     <style>
         body {
             margin: 0;
             padding: 0;
+            height: 100vh;
             background-image: url('background.jpg');
             background-size: cover;
             background-position: center;
-            background-repeat: no-repeat;
-            height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
@@ -20,118 +19,85 @@
             color: white;
             font-family: Arial, sans-serif;
         }
-
         #microphone {
             width: 50%;
             max-width: 200px;
+            height: auto;
             margin-bottom: 1%;
             cursor: pointer;
         }
-
-        #text {
-            margin-bottom: 10px;
+        #output {
+            margin-bottom: 2%;
             text-align: center;
+        }
+        audio {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div id="text"></div>
+    <div id="output"></div>
     <img id="microphone" src="microphone.png" alt="Microphone">
+    <audio id="audio"></audio>
 
     <script>
-        const microphone = document.getElementById('microphone');
-        const textElement = document.getElementById('text');
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'fa-IR';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
 
-        let recognition;
+        const audio = document.getElementById('audio');
+        const output = document.getElementById('output');
 
-        if ('webkitSpeechRecognition' in window) {
-            recognition = new webkitSpeechRecognition();
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.lang = 'fa-IR';
-        } else {
-            alert('مرورگر شما از تشخیص صدا پشتیبانی نمی‌کند.');
-        }
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            output.textContent = transcript;
 
-        function playAudio(audioFile) {
-            const audio = new Audio(audioFile);
-            audio.play();
-        }
-
-        function searchGoogle(query) {
-            window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
-        }
-
-        function handleText(text) {
-            textElement.textContent = text;
-
-            if (text.includes('سلام')) {
+            if (transcript.includes('سلام')) {
                 playAudio('greeting.mp3');
-            } else if (
-                text.includes('اسمت چیه') ||
-                text.includes('اسم تو چیه') ||
-                text.includes('ی هستی') ||
-                text.includes('سیری') ||
-                text.includes('بیکسپی')
-            ) {
+            } else if (transcript.includes('اسمت چیه') || transcript.includes('اسم تو چیه') || transcript.includes('ی هستی') || transcript.includes('سیری') || transcript.includes('بیکسپی')) {
                 playAudio('Amin.m4a');
-            } else if (
-                text.includes('روشن کن') ||
-                text.includes('خاموش کن') ||
-                text.includes('روشن بکن') ||
-                text.includes('خاموش بکن') ||
-                text.includes('تنظیم کن') ||
-                text.includes('برو تو') ||
-                text.includes('باز کن') ||
-                text.includes('بزار بود')
-            ) {
+            } else if (transcript.includes('روشن کن') || transcript.includes('خاموش کن') || transcript.includes('روشن بکن') || transcript.includes('خاموش بکن') || transcript.includes('تنظیم کن') || transcript.includes('برو تو') || transcript.includes('باز کن') || transcript.includes('بزار')) {
                 playAudio('On_off_speed.m4a');
-            } else if (
-                text.includes('خوبی') ||
-                text.includes('چطوری') ||
-                text.includes('بهتری') ||
-                text.includes('حالت چطوره') ||
-                text.includes('حالت خوبه') ||
-                text.includes('تو خیلی')
-            ) {
+            } else if (transcript.includes('خوبی') || transcript.includes('چطوری') || transcript.includes('بهتری') || transcript.includes('حالت چطوره') || transcript.includes('حالت خوبه') || transcript.includes('تو خیلی')) {
                 playAudio('Tanks.m4a');
-            } else if (text.includes('چه خبر')) {
+            } else if (transcript.includes('چه خبر')) {
                 playAudio('Slalamati(1).m4a');
-            } else if (text.includes('کیر') || text.includes('*')) {
+            } else if (transcript.includes('کیر') || transcript.includes('*')) {
                 playAudio('Foush.m4a');
-            } else if (
-                text.includes('چیست') ||
-                text.includes('کیست') ||
-                text.includes('کجاست') ||
-                text.includes('چطوره')
-            ) {
-                searchGoogle(text);
+            } else if (transcript.includes('چیست') || transcript.includes('کیست') || transcript.includes('کجاست') || transcript.includes('چطوره')) {
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(transcript)}`, '_blank');
             } else {
                 playAudio('default.mp3');
             }
+        };
+
+        recognition.onspeechend = () => {
+            recognition.stop();
+        };
+
+        recognition.onend = () => {
+            setTimeout(() => {
+                recognition.start();
+            }, 5000);
+        };
+
+        function playAudio(src) {
+            audio.src = src;
+            audio.play().then(() => {
+                recognition.stop();
+            }).catch((error) => {
+                console.error('Error playing audio:', error);
+            });
         }
 
-        microphone.addEventListener('click', () => {
-            if (recognition) {
-                recognition.start();
-                textElement.textContent = 'در حال شنیدن...';
-
-                recognition.onresult = (event) => {
-                    const text = event.results[0][0].transcript;
-                    handleText(text);
-
-                    setTimeout(() => {
-                        recognition.stop();
-                        recognition.start(); // Restart recognition after processing
-                    }, 5000);
-                };
-
-                recognition.onerror = (event) => {
-                    console.error('خطا در تشخیص صدا:', event.error);
-                    recognition.stop();
-                };
-            }
+        document.getElementById('microphone').addEventListener('click', () => {
+            recognition.start();
         });
+
+        window.onload = () => {
+            recognition.start();
+        };
     </script>
 </body>
 </html>
